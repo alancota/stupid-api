@@ -1,0 +1,44 @@
+name: stupid-api
+
+services:
+  stupidapi:
+    tty: true
+    build: .
+    image: alancota/stupid-api:rc1
+    container_name: stupid-api
+    ports: []
+    command:
+      - sanic
+      - src.stupid_api.server:app
+      - --port=7777
+      - --host=0.0.0.0
+      - --workers=1
+      - --dev
+      - --debug
+      - --access-log
+    volumes:
+      - ./src/stupid_api:/app/src/stupid_api:z
+    environment:
+        - PYTHONUNBUFFERED=1
+        - PYTHONPATH=/app
+        - SANIC_ENV=development
+        - SANIC_OAS_UI_DEFAULT=swagger
+        - SANIC_OAS_URI_TO_SWAGGER=/oas
+    networks:
+      - stupid-net
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - stupid-net
+    depends_on:
+      - stupidapi
+
+networks:
+  stupid-net:
+    driver: bridge
